@@ -1,40 +1,7 @@
-/*
-
- Smoothing
- 
- Reads repeatedly from an analog input, calculating a running average
- and printing it to the computer.  Keeps ten readings in an array and 
- continually averages them.
- 
- The circuit:
- * Analog sensor (potentiometer will do) attached to analog input 0
- 
- Created 22 April 2007
- By David A. Mellis  <dam@mellis.org>
- modified 9 Apr 2012
- by Tom Igoe
- http://www.arduino.cc/en/Tutorial/Smoothing
- 
- This example code is in the public domain.
- 
- 
- */
-
-
-// Define the number of samples to keep track of.  The higher the number,
-// the more the readings will be smoothed, but the slower the output will
-// respond to the input.  Using a constant rather than a normal variable lets
-// use this value to determine the size of the readings array.
-const int numReadings = 10;
-
-int reading;      // the readings from the analog input
-int index = 0;                  // the index of the current reading
-int total = 0;                  // the running total
-int average = 0;                // the average
 
 int inputPin = A0;
 
-int cutoff = 505;
+int cutoff = 510;
 
 int led = 13;
 int led1 = 11;
@@ -43,6 +10,8 @@ int led3 = 9;
 int led4 = 6;
 int led5 = 5;
 
+int motorPin = 3;
+int redLED = 2;
 int near = 0;
 
 int counter = 0;
@@ -51,49 +20,109 @@ unsigned long time;
 
 unsigned long dt;
 
+unsigned long motorTimer;
 
+unsigned long motorStartDelay;
 
+int reading;
+
+int motorStatus = 0;
 
 void setup()
 {
-  pinMode(led,OUTPUT);
+  pinMode(motorPin,OUTPUT);
   pinMode(led1, OUTPUT);
   pinMode(led2, OUTPUT);     
   pinMode(led3, OUTPUT);     
   pinMode(led4, OUTPUT);     
   pinMode(led5, OUTPUT);     
-
+  pinMode(redLED,OUTPUT);
+  
   // initialize serial communication with computer:
   Serial.begin(9600);                   
   // initialize all the readings to 0: 
   counter = 0; 
-  cutoff = analogRead(A1);  
   time = millis();
-  cutoff = 505;
+  cutoff = 510;
+  motorTimer = millis() + 5000;
+  motorStartDelay =  millis() + 2000;
+  digitalWrite(motorPin, LOW); 
   
 }
+
+void allLEDOff(){
+  digitalWrite(led1, LOW); 
+  digitalWrite(led2, LOW); 
+  digitalWrite(led3, LOW); 
+  digitalWrite(led4, LOW); 
+  digitalWrite(led5, LOW); 
+
+}
+
+void motorOn(){
+  digitalWrite(motorPin, HIGH);
+  digitalWrite(redLED, LOW); 
+  motorStatus = 1;
+  //Serial.println("Motor On");
+}
+
+void motorOff(){
+  digitalWrite(motorPin, LOW);
+  digitalWrite(redLED, HIGH); 
+  motorStatus = 0;
+
+  //Serial.println("Motor Off");  
+}
+
 
 void loop() {
   
   reading = analogRead(inputPin);
+  dt = millis() - time;
+
+  // if more than one sec between reads
+  if(dt > 1000){
+    //turn off LEDs
+    allLEDOff();
+    motorStatus = 0;
+  }
+
+
+  if(millis() - motorTimer > 5000){
+    motorOff();
+  }
+
 
   if(reading < cutoff){
-      dt = millis() - time;
       
-    if(!near && dt > 50){
+    if(!near && dt > 100){
+//      digitalWrite(led, HIGH); 
       
+
       Serial.print(counter);
       Serial.print("\t");
       Serial.print(dt);
       Serial.print("\t");
-      Serial.println(reading);
+      Serial.println(motorStatus);
       counter++;
 
       if(dt < 400){
           digitalWrite(led5, HIGH); 
-  
+          motorTimer = millis();
+
+          if(motorStatus == 0){
+            motorStartDelay = millis() + 1000;
+            motorStatus = 1;
+          }
+
+
+          if(millis() > motorStartDelay){
+            motorOn();
+          }  
+          
         }else{
-          digitalWrite(led5, LOW); 
+          digitalWrite(led5, LOW);
+          motorStatus = 0; 
 
         }
         
@@ -112,14 +141,14 @@ void loop() {
           digitalWrite(led3, LOW); 
 
         }
-        if(dt < 550){
+        if(dt < 520){
           digitalWrite(led2, HIGH); 
   
         }else{
           digitalWrite(led2, LOW); 
 
         }
-        if(dt < 600){
+        if(dt < 550){
           digitalWrite(led1, HIGH); 
   
         }else{
@@ -136,13 +165,14 @@ void loop() {
   } 
   else{
     near = 0;
-   digitalWrite(led, LOW); 
 
   } 
   // send it to the computer as ASCII digits
-  //Serial.println(average);   
+  if(reading < 510){
+    //Serial.println(reading);  
+  }
+     
   //delay(10);        // delay in between reads for stability            
 }
-
 
 
