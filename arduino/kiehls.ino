@@ -12,42 +12,71 @@
 #define NUM_READINGS 10
 #define LED_PIN 13
 
-#define NUM_SENSORS 4
+#define NUM_LASERS 3
 
-#define HALL_EFFECT 0
-#define LASER_1     1
-#define LASER_2     2
-#define LASER_3     3
+#define LASER_1     0
+#define LASER_2     1
+#define LASER_3     2
 
 #define HALL_EFFECT_PIN A0
 #define LASER_1_PIN     A1
 #define LASER_2_PIN     A2
 #define LASER_3_PIN     A3
 
-
-int readings[NUM_SENSORS][NUM_READINGS];  // the readings from the analog input
+int readings[NUM_LASERS][NUM_READINGS];  // the readings from the analog input
 int index = 0;                            // the index of the current reading
-int total[NUM_SENSORS];                   // the running total
-int average[NUM_SENSORS];                 // the average
+int total[NUM_LASERS];                   // the running total
+int average[NUM_LASERS];                 // the average
 
-int inputPins[NUM_SENSORS];               // the pin numbers
+int inputPins[NUM_LASERS];               // the pin numbers
 
-int thresholds[NUM_SENSORS];               // threshold to trigger count 
+int thresholds[NUM_LASERS];               // threshold to trigger count 
 
-int lowHighTrigger[NUM_SENSORS];            // indicate whether to trigger above (1) or below (0) threshold
+int triggered[NUM_LASERS];
 
-int triggered[NUM_SENSORS];
+int counter[NUM_LASERS];
 
-int counter[NUM_SENSORS];
+
+
+
+int cutoff = 510;
+
+int led1 = 11;
+int led2 = 10;
+int led3 = 9;
+int led4 = 6;
+int led5 = 5;
+
+int motorPin = 3;
+int redLED = 2;
+int near = 0;
+
+
+unsigned long time;
+
+unsigned long dt;
+
+unsigned long motorTimer;
+
+unsigned long motorStartDelay;
+
+int hallEffectReading;
+
+int motorStatus = 0;
+
+int motorState = 0;
 
 void setup()
 {
-  pinMode(LED_PIN,OUTPUT);
-  // initialize serial communication with computer:
-  Serial.begin(9600);                   
-
-  // Initialise arrays  
-  for(int i =0; i < NUM_SENSORS; i++){
+  pinMode(motorPin,OUTPUT);
+  pinMode(led1, OUTPUT);
+  pinMode(led2, OUTPUT);     
+  pinMode(led3, OUTPUT);     
+  pinMode(led4, OUTPUT);     
+  pinMode(led5, OUTPUT);     
+  pinMode(redLED,OUTPUT);
+  
+    for(int i =0; i < NUM_LASERS; i++){
 
     // initialize all the readings to 0: 
   
@@ -63,30 +92,159 @@ void setup()
   }
 
   // Set Pin Numbers
-  inputPins[HALL_EFFECT] = HALL_EFFECT_PIN;
   inputPins[LASER_1] = LASER_1_PIN;
   inputPins[LASER_2] = LASER_2_PIN;
   inputPins[LASER_3] = LASER_3_PIN;
 
   // set thresholds
-  thresholds[HALL_EFFECT] = 500;
   thresholds[LASER_1] = 90;
   thresholds[LASER_2] = 90;
   thresholds[LASER_3] = 90;
+
+
+  // initialize serial communication with computer:
+  Serial.begin(9600);                   
+
+  time = millis();
+  cutoff = 510;
+  motorTimer = millis() + 5000;
+  motorStartDelay =  millis() + 2000;
+  digitalWrite(motorPin, LOW); 
+
   
-  lowHighTrigger[HALL_EFFECT] = 0;      // Hall effect sensor triggers below threshold
-  lowHighTrigger[LASER_1] = 1;          //Photo transistors trigger above threshold
-  lowHighTrigger[LASER_2] = 1;
-  lowHighTrigger[LASER_3] = 0;
-
-  digitalWrite(LED_PIN, LOW); 
-
- 
 }
+
+void allLEDOff(){
+  digitalWrite(led1, LOW); 
+  digitalWrite(led2, LOW); 
+  digitalWrite(led3, LOW); 
+  digitalWrite(led4, LOW); 
+  digitalWrite(led5, LOW); 
+
+}
+
+void motorOn(){
+  digitalWrite(motorPin, HIGH);
+  digitalWrite(redLED, LOW); 
+  motorStatus = 1;
+  if(motorState == 0)
+    Serial.println("0 1 Motor On");
+  
+  motorState = 1;
+
+}
+
+void motorOff(){
+  digitalWrite(motorPin, LOW);
+  digitalWrite(redLED, HIGH); 
+  if(motorState == 1)
+    Serial.println("0 0 Motor Off");  
+
+  motorStatus = 0;
+  motorState = 0;
+}
+
 
 void loop() {
   
-  for(int i=0; i < NUM_SENSORS; i++){
+  hallEffectReading = analogRead(HALL_EFFECT_PIN);
+  dt = millis() - time;
+
+  // if more than one sec between reads
+  if(dt > 1000){
+    //turn off LEDs
+    allLEDOff();
+    motorStatus = 0;
+  }
+
+
+  if(millis() - motorTimer > 5000){
+    motorOff();
+  }
+
+
+  if(hallEffectReading < cutoff){
+      
+    if(!near && dt > 100){
+//      digitalWrite(led, HIGH); 
+      
+/*
+      Serial.print(hallEffectReading);
+      Serial.print("\t");
+      Serial.print(dt);
+      Serial.print("\t");
+      Serial.println(motorStatus);
+*/
+      if(dt < 400){
+          digitalWrite(led5, HIGH); 
+          motorTimer = millis();
+
+          if(motorStatus == 0){
+            motorStartDelay = millis() + 1000;
+            motorStatus = 1;
+          }
+
+
+          if(millis() > motorStartDelay){
+            motorOn();
+          }  
+          
+        }else{
+          digitalWrite(led5, LOW);
+          motorStatus = 0; 
+
+        }
+        
+        if(dt < 450){
+          digitalWrite(led4, HIGH); 
+  
+        }else{
+          digitalWrite(led4, LOW); 
+
+        }
+        
+        if(dt < 500){
+          digitalWrite(led3, HIGH); 
+  
+        }else{
+          digitalWrite(led3, LOW); 
+
+        }
+        if(dt < 520){
+          digitalWrite(led2, HIGH); 
+  
+        }else{
+          digitalWrite(led2, LOW); 
+
+        }
+        if(dt < 550){
+          digitalWrite(led1, HIGH); 
+  
+        }else{
+          digitalWrite(led1, LOW); 
+
+        }    
+    
+    
+
+      time = millis();
+    }  
+    near = 1;
+
+  } 
+  else{
+    near = 0;
+
+  } 
+  // send it to the computer as ASCII digits
+  if(hallEffectReading < 510){
+    //Serial.println(hallEffectReading);  
+  }
+  
+
+  //Read Laser Sensors
+
+ for(int i=0; i < NUM_LASERS; i++){
     // subtract the last readanalogRead(A1):
     total[i]= total[i] - readings[i][index];         
     // read from the sensor:  
@@ -100,14 +258,14 @@ void loop() {
   
     //Check if average is above or below threshold depending on lowHighTrigger 
 
-    if( ((average[i] > thresholds[i]) && lowHighTrigger[i]) || ((average[i] < thresholds[i]) && !lowHighTrigger[i]) ){
+    if( average[i] < thresholds[i] ){
 
-      digitalWrite(LED_PIN, HIGH); 
+      //digitalWrite(LED_PIN, HIGH); 
       if(!triggered[i]){
-        Serial.print(i);
-        Serial.print("\t");
+        Serial.print(i + 1);  // display laser number
+        Serial.print(" ");
         Serial.print(counter[i]);
-        Serial.print("\t");
+        Serial.print(" ");
         Serial.println(average[i]);
         counter[i]++;
       }  
@@ -115,7 +273,7 @@ void loop() {
     } 
     else{
       triggered[i] = 0;
-      digitalWrite(LED_PIN, LOW); 
+      //digitalWrite(LED_PIN, LOW); 
     }
       
   } 
@@ -130,29 +288,7 @@ void loop() {
     index = 0;                           
 
 
-  // send it to the computer as ASCII digits
-  
-  /*for(int i=0; i < 2; i++){
-    Serial.print(i);
-    Serial.print(" ");
-    Serial.print(analogRead(inputPins[i]));
-    Serial.print(" ");
-    Serial.print(triggered[i]);
-    Serial.print(" ");
-    Serial.print(average[i]);
-    Serial.print("\t");
-    
-  } 
- 
-
-  Serial.print(analogRead(A0));
-  Serial.print(" ");
-  Serial.println(analogRead(A3));
-  */  
-
-  
-  delay(10);        // delay in between reads for stability            
+  //delay(10);        // delay in between reads for stability            
 }
-
 
 

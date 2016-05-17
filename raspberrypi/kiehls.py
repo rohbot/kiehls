@@ -21,15 +21,17 @@ def httpPost(target):
 
 while 1:
 	line = ser.readline()
-	vals = line.strip().split('\t')
+	vals = line.strip().split(' ')
 	sensor = int(vals[0])
 	count = int(vals[1])
 
 	#print sensor, count
 	if sensor == 0:
+		print line
+	if sensor == 2:
 		print 'Bottle up!' , count
 		httpPost('bottles')
-	if sensor == 3:
+	if sensor == 1:
 		print 'Can Can'	, count
 		httpPost('cans')
 
