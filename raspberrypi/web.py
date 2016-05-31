@@ -1,7 +1,7 @@
 from flask import Flask, request, render_template
 import redis
 
-redis = redis.Redis(password="redisb0x1337")
+redis = redis.Redis()
 
 
 app = Flask(__name__)
@@ -16,17 +16,18 @@ def hello():
 	total = cans + bottles
 	return render_template('index.html',cans=cans, bottles=bottles, total=total) 
 
-@app.route("/cans", methods=["POST"])
-def cans():
+@app.route("/counter/ping/<name>")
+def cans(name):
+	redis.incr(name)
 	#print request.data
 	return str(redis.incr('cans'))
 
 
-@app.route("/bottles", methods=["POST"])
+@app.route("/bottles")
 def bottles():
 	#print request.data
 	return str(redis.incr('bottles'))
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0",debug=True)
