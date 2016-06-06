@@ -36,8 +36,9 @@ int triggered[NUM_LASERS];
 
 int counter[NUM_LASERS];
 
+unsigned long lastTrigger[NUM_LASERS];    // Store time the last laser is triggered 
 
-
+int laser_debounce = 2000;                // Time between laser pulses
 
 int cutoff = 610;
 
@@ -108,7 +109,7 @@ void setup()
     average[i] = 0;
     triggered[i] = 0;
     counter[i] = 0;
-
+    lastTrigger[i] = millis();
   }
 
   // Set Pin Numbers
@@ -117,7 +118,7 @@ void setup()
   inputPins[LASER_3] = LASER_3_PIN;
 
   // set thresholds
-  thresholds[LASER_1] = 90;
+  thresholds[LASER_1] = 200;
   thresholds[LASER_2] = 90;
   thresholds[LASER_3] = 90;
 
@@ -261,7 +262,7 @@ void loop() {
 
   //Read Laser Sensors
 
- for(int i=0; i < NUM_LASERS; i++){
+  for(int i=0; i < NUM_LASERS; i++){
     // subtract the last readanalogRead(A1):
     total[i]= total[i] - readings[i][index];         
     // read from the sensor:  
@@ -275,16 +276,18 @@ void loop() {
   
     //Check if average is above or below threshold depending on lowHighTrigger 
 
-    if( average[i] < thresholds[i] ){
+
+    if( average[i] < thresholds[i]  ){
 
       //digitalWrite(LED_PIN, HIGH); 
-      if(!triggered[i]){
+      if(!triggered[i] && millis() - lastTrigger[i] > laser_debounce){
         Serial.print(i + 1);  // display laser number
         Serial.print(" ");
         Serial.print(counter[i]);
         Serial.print(" ");
         Serial.println(average[i]);
         counter[i]++;
+        lastTrigger[i] = millis();
       }  
       triggered[i] = 1;
     } 
