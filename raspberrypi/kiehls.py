@@ -30,7 +30,7 @@ def internet_on():
 
 def httpPost(target):
 
-	r = requests.get(URL + target)
+	r = requests.get(URL + target,verify=False)
 	print r.text
 
 internet_on()
@@ -42,23 +42,21 @@ while 1:
 		sensor = int(vals[0])
 		count = int(vals[1])
 
-		#print sensor, count
+		print sensor, count
 		if count != 0:
 
 			if sensor == 0:
 				print line
-			if sensor == 2:
-				print 'Bottle up!' , count
-				#httpPost(name)
-			if sensor == 1:
-				print 'Can Can'	, count
+			else:
+				print 'yeah:'	, count
 				httpPost(name)
 	except KeyboardInterrupt:
 		raise
 	except:
 		e = sys.exc_info()[0]
 
-		print "something messed up", e				
+		print "something messed up", e
+						
 	#os.system('xdotool key XF86AudioPlay')
 	#redis_cloud.publish('fb-out', "arduino press " + str(count))
 	#redis_pi.publish('socketio', 'blink')
