@@ -118,9 +118,9 @@ void setup()
   inputPins[LASER_3] = LASER_3_PIN;
 
   // set thresholds
-  thresholds[LASER_1] = 200;
-  thresholds[LASER_2] = 90;
-  thresholds[LASER_3] = 90;
+  thresholds[LASER_1] = 500;
+  thresholds[LASER_2] = 500;
+  thresholds[LASER_3] = 500;
 
 
   // initialize serial communication with computer:

@@ -68,11 +68,11 @@ int motorState = 0;
 
 
 void allLEDOff(){
-  digitalWrite(led1, LOW); 
-  digitalWrite(led2, LOW); 
-  digitalWrite(led3, LOW); 
-  digitalWrite(led4, LOW); 
-  digitalWrite(led5, LOW); 
+  digitalWrite(led1, HIGH); 
+  digitalWrite(led2, HIGH); 
+  digitalWrite(led3, HIGH); 
+  digitalWrite(led4, HIGH); 
+  digitalWrite(led5, HIGH); 
 
 }
 
@@ -117,7 +117,11 @@ void loop() {
  }else{
   digitalWrite(LED_PIN,LOW);
  }
- Serial.println(value);
+ Serial.print(analogRead(LASER_1_PIN));
+ Serial.print('\t');
+ Serial.print(analogRead(LASER_2_PIN));
+ Serial.print('\t');
+ Serial.println(analogRead(LASER_3_PIN));
  
  delay(30);
 
