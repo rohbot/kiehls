@@ -121,7 +121,9 @@ void loop() {
  Serial.print('\t');
  Serial.print(analogRead(LASER_2_PIN));
  Serial.print('\t');
- Serial.println(analogRead(LASER_3_PIN));
+ Serial.print(analogRead(LASER_3_PIN));
+ Serial.print('\t');
+ Serial.println(analogRead(HALL_EFFECT_PIN));
  
  delay(30);
 
