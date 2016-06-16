@@ -102,7 +102,7 @@ void setup()
   // initialize serial communication with computer:
   Serial.begin(9600);                   
 
-  digitalWrite(motorPin, LOW); 
+  digitalWrite(motorPin, HIGH); 
   allLEDOff();
   
 }
