@@ -22,6 +22,7 @@
 #define LASER_1_PIN     A1
 #define LASER_2_PIN     A2
 #define LASER_3_PIN     A3
+#define SWITCH_PIN      12
 
 int readings[NUM_LASERS][NUM_READINGS];  // the readings from the analog input
 int index = 0;                            // the index of the current reading
@@ -38,7 +39,7 @@ int counter[NUM_LASERS];
 
 unsigned long lastTrigger[NUM_LASERS];    // Store time the last laser is triggered 
 
-int laser_debounce = 2000;                // Time between laser pulses
+unsigned long laser_debounce = 2000;                // Time between laser pulses
 
 int cutoff = 610;
 
@@ -66,11 +67,17 @@ int hallEffectReading;
 
 int prevReading = 520;
 
-int motorStatus = 0;
 
 int motorState = 0;
 
 int readingThreshold = 30;
+
+// Variables will change:
+int buttonPushCounter = 0;   // counter for the number of button presses
+int buttonState = 0;         // current state of the button
+int lastButtonState = 0;     // previous state of the button
+
+
 
 void allLEDOff(int step_time){
   digitalWrite(led5, HIGH);
@@ -95,6 +102,9 @@ void setup()
   pinMode(led4, OUTPUT);     
   pinMode(led5, OUTPUT);     
   pinMode(redLED,OUTPUT);
+  pinMode(LED_PIN,OUTPUT);
+  
+  pinMode(SWITCH_PIN, INPUT_PULLUP);
   digitalWrite(motorPin, HIGH);
   
     for(int i =0; i < NUM_LASERS; i++){
@@ -133,6 +143,7 @@ void setup()
   digitalWrite(motorPin, LOW); 
 
   allLEDOff(0);
+  lastButtonState = digitalRead(SWITCH_PIN); 
     
 }
 
@@ -141,7 +152,6 @@ void motorOn(){
   //digitalWrite(motorPin, HIGH);
   digitalWrite(motorPin, LOW);
   digitalWrite(redLED, LOW); 
-  motorStatus = 1;
   if(motorState == 0)
     Serial.println("0 1 Motor On");
   
@@ -158,7 +168,6 @@ void motorOff(){
     Serial.println("0 0 Motor Off");
     allLEDOff(250);  
   } 
-  motorStatus = 0;
   motorState = 0;
 
 }
@@ -187,11 +196,11 @@ void loop() {
 //      digitalWrite(led, HIGH); 
       
 
-      Serial.print(hallEffectReading);
-      Serial.print("\t");
+      Serial.print(0);
+      Serial.print(" ");
       Serial.print(dt);
-      Serial.print("\t");
-      Serial.println(motorStatus);
+      Serial.print(" ");
+      Serial.println(hallEffectReading);
 
       if(dt < 200){
           digitalWrite(led5, LOW); 
@@ -200,11 +209,10 @@ void loop() {
           motorOn();
             
        }else{
-            if(motorState ==0){
+            if(motorState == 0){
               digitalWrite(led5, HIGH);
             }
           
-          //motorStatus = 0; 
 
         }
         
@@ -212,7 +220,7 @@ void loop() {
           digitalWrite(led4, LOW); 
   
         }else{
-          if(motorState ==0){
+          if(motorState == 0){
              digitalWrite(led4, HIGH); 
           }
         }
@@ -221,7 +229,7 @@ void loop() {
           digitalWrite(led3, LOW); 
   
         }else{
-          if(motorState ==0){
+          if(motorState == 0){
             digitalWrite(led3, HIGH); 
           }
         }
@@ -229,7 +237,7 @@ void loop() {
           digitalWrite(led2, LOW); 
   
         }else{
-          if(motorState ==0){
+          if(motorState == 0){
             digitalWrite(led2, HIGH); 
           }
 
@@ -261,7 +269,7 @@ void loop() {
   
 
   //Read Laser Sensors
-
+/*
   for(int i=0; i < NUM_LASERS; i++){
     // subtract the last readanalogRead(A1):
     total[i]= total[i] - readings[i][index];         
@@ -306,7 +314,29 @@ void loop() {
   if (index >= NUM_READINGS)              
     // ...wrap around to the beginning: 
     index = 0;                           
+*/
+
   prevReading = hallEffectReading;
+
+  buttonState = digitalRead(SWITCH_PIN);
+
+  // compare the buttonState to its previous state
+  if (buttonState != lastButtonState) {
+    // if the state has changed, increment the counter
+    if (buttonState == HIGH) {
+      // if the current state is HIGH then the button
+      // wend from off to on:
+      buttonPushCounter++;
+      Serial.print("1 ");
+      Serial.println(buttonPushCounter);
+       //Serial.println("on");
+      //Serial.print("number of button pushes:  ");
+      //Serial.println(buttonPushCounter);
+    } 
+  }
+  // save the current state as the last state, 
+  //for next time through the loop
+  lastButtonState = buttonState;
 
   //delay(10);        // delay in between reads for stability            
 }
